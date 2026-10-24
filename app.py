@@ -417,6 +417,17 @@ with overview_tab:
             .reindex([False, True], fill_value=0)
         )
 
+        skip_chart = pd.DataFrame({
+            "Listening outcome": [
+                "Not skipped",
+                "Skipped"
+            ],
+            "Events": [
+                int(skip_counts.loc[False]),
+                int(skip_counts.loc[True])
+            ]
+        })
+        
         fig, ax = plt.subplots(figsize=(6, 4))
         fig.patch.set_facecolor("#1B1A29")
         ax.set_facecolor("#1B1A29")
