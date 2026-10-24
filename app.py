@@ -20,7 +20,61 @@ st.caption(
     "skips, and listening activity."
 )
 
-DATA_PATH = Path("data/spotify_data.csv")
+
+# Replace your current dataset path/loading section with this.
+
+uploaded_file = st.sidebar.file_uploader(
+    "Upload your Spotify listening history CSV",
+    type=["csv"]
+)
+
+if uploaded_file is None:
+    st.info("Upload spotify_data.csv in the sidebar to use the dashboard.")
+    st.stop()
+
+@st.cache_data
+def load_data(uploaded_file):
+    data = pd.read_csv(uploaded_file)
+
+    required_columns = [
+        "spotify_track_uri",
+        "ts",
+        "ms_played",
+        "track_name",
+        "artist_name",
+        "skipped"
+    ]
+
+    missing = [
+        col for col in required_columns
+        if col not in data.columns
+    ]
+
+    if missing:
+        st.error(f"Missing required columns: {missing}")
+        st.stop()
+
+    data["ts"] = pd.to_datetime(data["ts"], errors="coerce")
+    data["ms_played"] = pd.to_numeric(
+        data["ms_played"], errors="coerce"
+    )
+    data["skipped"] = (
+        data["skipped"].astype(str).str.lower()
+        .map({"true": True, "false": False})
+    )
+
+    data = data.dropna(
+        subset=["ts", "spotify_track_uri", "track_name"]
+    ).copy()
+
+    data = data[data["ms_played"] >= 0].copy()
+    data["minutes_played"] = data["ms_played"] / 60000
+    data["date"] = data["ts"].dt.date
+
+    return data
+
+df = load_data(uploaded_file)
+
 
 
 # ==========================================
